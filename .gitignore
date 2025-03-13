@@ -1,0 +1,9 @@
+# Environnement virtuel
+tuto/
+# Fichiers Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Fichiers d'environnement
+.env
