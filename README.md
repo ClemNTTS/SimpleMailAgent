@@ -21,8 +21,8 @@ Cet agent utilise le modèle Gemma 2B d'Ollama pour analyser le sentiment des me
 1. Clonez le repository :
 
 ```bash
-git clone [URL_DU_REPO]
-cd [NOM_DU_DOSSIER]
+git clone https://github.com/ClemNTTS/SimpleMailAgent
+cd SimpleMailAgent
 ```
 
 2. Créez un environnement virtuel et activez-le :
