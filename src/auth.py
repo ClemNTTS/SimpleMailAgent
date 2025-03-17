@@ -26,9 +26,12 @@ def test_imap_connection(email, password, imap_server="imap.gmail.com"):
     """Teste la connexion IMAP"""
     try:
         fetcher = MailFetcher(email, password, imap_server)
-        return fetcher.connect()
+        if fetcher.connect():
+            fetcher.disconnect()  # Ferme proprement la connexion
+            return True
+        return False
     except Exception as e:
-        st.error(f"Erreur de connexion IMAP : {str(e)}")
+        print(f"Erreur de connexion IMAP : {str(e)}")
         return False
 
 def register_user(username, password, email, imap_password, imap_server="imap.gmail.com"):
@@ -36,7 +39,7 @@ def register_user(username, password, email, imap_password, imap_server="imap.gm
     try:
         # Test de la connexion IMAP avant l'inscription
         if not test_imap_connection(email, imap_password, imap_server):
-            return False, "Impossible de se connecter à la boîte mail. Vérifiez vos identifiants."
+            return False, "Impossible de se connecter à la boîte mail. Vérifiez vos identifiants IMAP."
 
         conn = sqlite3.connect('mails.db')
         c = conn.cursor()
@@ -49,13 +52,15 @@ def register_user(username, password, email, imap_password, imap_server="imap.gm
         return True, "Inscription réussie"
     except sqlite3.IntegrityError:
         return False, "Ce nom d'utilisateur ou cet email est déjà utilisé"
+    except Exception as e:
+        return False, f"Erreur lors de l'inscription : {str(e)}"
 
 def update_user_email(user_id, new_email, imap_password, imap_server="imap.gmail.com"):
     """Met à jour l'email et les informations IMAP d'un utilisateur"""
     try:
         # Test de la connexion IMAP avant la mise à jour
         if not test_imap_connection(new_email, imap_password, imap_server):
-            return False, "Impossible de se connecter à la nouvelle boîte mail"
+            return False, "Impossible de se connecter à la nouvelle boîte mail. Vérifiez vos identifiants IMAP."
 
         conn = sqlite3.connect('mails.db')
         c = conn.cursor()

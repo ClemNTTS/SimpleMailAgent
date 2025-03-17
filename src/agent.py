@@ -1,29 +1,36 @@
-import ollama
+import google.generativeai as genai
+import os
+from dotenv import load_dotenv
+
+# Chargement des variables d'environnement
+load_dotenv()
+
+# Configuration de l'API Gemini
+GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
+genai.configure(api_key=GOOGLE_API_KEY)
+
+# Initialisation du modèle
+model = genai.GenerativeModel('gemini-2.0-flash')
 
 def analyser_mail(contenu):
-    """Analyse le contenu du mail et le classe dans une catégorie"""
-    response = ollama.chat(
-        model="gemma:2b",
-        messages=[
-            {
-                "role": "system",
-                "content": """Tu es un analyseur de mails intelligent. Classifie les mails en trois catégories:
-                - 'important': mails nécessitant une attention personnelle
-                - 'automatique': mails non prioritaires pouvant être traités automatiquement
-                - 'neutre': mails nécessitant une revue humaine
-                Réponds uniquement avec une de ces trois catégories."""
-            },
-            {
-                "role": "user",
-                "content": f"Analyse ce mail et classe-le : {contenu}"
-            }
-        ],
-        options={
-            "temperature": 0.1,
-            "stop": ["\n", ".", "!", "?"]
-        }
-    )
-    return response["message"]["content"].strip().lower()
+    """Analyse un mail et retourne sa catégorie"""
+    prompt = f"""Tu es un assistant spécialisé dans la classification d'emails.
+    Tu dois catégoriser chaque email en une seule catégorie parmi :
+    - 'important' : emails urgents, personnels, professionnels importants
+    - 'automatique' : newsletters, publicités, notifications automatiques
+    - 'neutre' : tous les autres emails
+    
+    Tu dois UNIQUEMENT répondre avec un seul mot en minuscules parmi ces trois options.
+    Analyse le contenu, l'urgence, la personnalisation et la source de l'email.
+    
+    Email à analyser : {contenu}"""
+    
+    try:
+        response = model.generate_content(prompt)
+        return response.text.strip().lower()
+    except Exception as e:
+        print(f"Erreur lors de l'analyse du mail : {str(e)}")
+        return "neutre"  # Catégorie par défaut en cas d'erreur
 
 
 def generer_reponse(categorie):

@@ -1,5 +1,4 @@
 import streamlit as st
-import pandas as pd
 from dotenv import load_dotenv
 from datetime import datetime
 from src.db import init_db, delete_table_users, ajouter_mail, get_mails_par_categorie, get_mails, reset_mails_table
@@ -38,31 +37,7 @@ def traiter_nouveau_mail():
                 email['categorie'] = categorie
                 ajouter_mail(email, st.session_state['user_id'])
             st.success(f"{len(emails)} mails récupérés et analysés")
-    
-    # Formulaire manuel
-    with st.form("nouveau_mail"):
-        sujet = st.text_input("Sujet du mail")
-        expediteur = st.text_input("Expéditeur")
-        contenu = st.text_area("Contenu du mail")
-        
-        if st.form_submit_button("Analyser"):
-            if sujet and expediteur and contenu:
-                categorie = analyser_mail(contenu)
-                
-                # Création du dictionnaire mail
-                mail = {
-                    'sujet': sujet,
-                    'expediteur': expediteur,
-                    'contenu': contenu,
-                    'categorie': categorie,
-                    'date_reception': datetime.now()
-                }
-                
-                # Sauvegarde dans la base de données
-                ajouter_mail(mail, st.session_state['user_id'])
-                
-                st.success(f"Mail classé comme : {categorie}")
-                st.write("Réponse générée :", generer_reponse(categorie))
+
 
 def afficher_statistiques():
     """Affiche les statistiques de classification"""
@@ -76,9 +51,47 @@ def afficher_statistiques():
 def afficher_derniers_mails():
     """Affiche les derniers mails traités"""
     df = get_mails(st.session_state['user_id'])
-    st.subheader("Derniers mails traités")
     if not df.empty:
-        st.dataframe(df.head())
+        # Affichage des mails importants
+        st.subheader("📌 Mails Importants")
+        mails_importants = df[df['categorie'] == 'important']
+        if not mails_importants.empty:
+            for _, mail in mails_importants.iterrows():
+                with st.expander(f"📧 {mail['sujet']} - {mail['expediteur']}"):
+                    st.write(f"**Date:** {mail['date_reception']}")
+                    with st.container():
+                        st.markdown(
+                            f"""
+                            <div style="height: 300px; overflow-y: auto;">
+                            **Contenu:** {mail['contenu']}...
+                            </div>
+                            """,
+                            unsafe_allow_html=True
+                        )
+        else:
+            st.info("Aucun mail important")
+        
+        # Affichage des mails automatiques
+        st.subheader("🤖 Mails Automatiques")
+        mails_automatiques = df[df['categorie'] == 'automatique']
+        if not mails_automatiques.empty:
+            for _, mail in mails_automatiques.iterrows():
+                with st.expander(f"📧 {mail['sujet']} - {mail['expediteur']}"):
+                    st.write(f"**Date:** {mail['date_reception']}")
+                    st.write(f"**Contenu:** {mail['contenu'][:200]}...")
+        else:
+            st.info("Aucun mail automatique")
+        
+        # Affichage des mails neutres
+        st.subheader("📬 Mails Neutres")
+        mails_neutres = df[df['categorie'] == 'neutre']
+        if not mails_neutres.empty:
+            for _, mail in mails_neutres.iterrows():
+                with st.expander(f"📧 {mail['sujet']} - {mail['expediteur']}"):
+                    st.write(f"**Date:** {mail['date_reception']}")
+                    st.write(f"**Contenu:** {mail['contenu'][:200]}...")
+        else:
+            st.info("Aucun mail neutre")
     else:
         st.info("Aucun mail traité pour le moment")
 
@@ -99,15 +112,18 @@ def afficher_parametres_imap():
                     st.error(message)
 
 def main():
-    # Initialisation des bases de données
+    # Initialisation de la base de données
     init_auth_db()
-    reset_mails_table()  # Réinitialise la table des mails avec la bonne structure
+    init_db()
+    
+    # Vérification de l'authentification
+    if 'user_id' not in st.session_state:
+        st.session_state.user_id = None
+        st.session_state.username = None
     
     # Page d'authentification
     if not st.session_state['logged_in']:
         st.title("Connexion / Inscription")
-        st.button("Supprimer la table des utilisateurs", on_click=delete_table_users)
-        
         tab1, tab2 = st.tabs(["Connexion", "Inscription"])
         
         with tab1:
@@ -122,35 +138,32 @@ def main():
         with st.sidebar:
             st.write(f"Connecté en tant que : {st.session_state['username']}")
             
-            # Paramètres IMAP
-            afficher_parametres_imap()
+            # Bouton pour récupérer les nouveaux mails
+            if st.button("🔄 Récupérer les nouveaux mails"):
+                with st.spinner("Récupération des mails en cours..."):
+                    emails = get_user_emails(st.session_state['user_id'])
+                    for email in emails:
+                        categorie = analyser_mail(email['contenu'])
+                        email['categorie'] = categorie
+                        ajouter_mail(email, st.session_state['user_id'])
+                    st.success(f"{len(emails)} mails récupérés et analysés")
             
-            # Boutons de déconnexion et de réinitialisation
-            if st.button("Se déconnecter"):
+            # Paramètres IMAP
+            with st.expander("⚙️ Paramètres IMAP"):
+                afficher_parametres_imap()
+            
+            # Bouton de déconnexion
+            if st.button("🚪 Se déconnecter"):
                 st.session_state['logged_in'] = False
                 st.session_state['username'] = None
                 st.session_state['user_id'] = None
                 st.rerun()
-            
-            st.divider()
-            st.write("Options de maintenance")
-            st.button("Supprimer la table des mails", on_click=reset_mails_table)
-            st.button("Supprimer la table des utilisateurs", on_click=delete_table_users)
         
         # Interface principale
-        st.title(f"Assistant IA de Gestion des Emails 📧")
+        st.title("📧 Gestionnaire d'Emails")
         
-        # Création des onglets
-        tab1, tab2, tab3 = st.tabs(["Nouveau Mail", "Statistiques", "Historique"])
-        
-        with tab1:
-            traiter_nouveau_mail()
-        
-        with tab2:
-            afficher_statistiques()
-        
-        with tab3:
-            afficher_derniers_mails()
+        # Affichage des mails par catégorie
+        afficher_derniers_mails()
 
 if __name__ == "__main__":
     main()
