@@ -1,0 +1,8 @@
+Ce projet a pour but de créer une application avec une IA agent intégrée. L'objectif du projet est d'apporter une solution automatisée aux personnes qui sont exaspérées par la quantité de mails abusives de nos jours. Pour cela, l'IA Agent du projet va analyser les mails reçu par un utilisateur et les classer en trois catégories :
+- Important : ce sont les mails qui possèdent une/des information(s) importante(s) ou qui nécessite une réponse très personnelle de l'utilisateur.
+- Automatique : ce sont les mails que l'IA a qualifié de non intéressant et qui par conséquent n'ont pas besoin d'être répondu ou lu par l'utilisateur. L'IA peut également répondre au mail automatiquement si la réponse attendue n'est pas importante.
+- Neutre : c'est la catégorie de mail que l'IA n'a pas réussi à classifier , cette catégorie nécessite l'intervention de l'utilisateur pour classer le mail.
+
+Le projet doit également permettre de gérer ses mails comme une boite de réception de mails classique (Gmail, Orange, etc ...)
+
+Une fois que le triage et réponse automatisée seront terminée ; la feature annexe à implémenter sera la possibilité pour l'utilisateur de créer ses propres catégories de mails. De définir si l'IA doit répondre ou non à ses mails, potentiellement en donnant un prompt pour diriger la réponse de l'IA. L'utilisateur pourra donner des mails d'example qu'il a reçu pour aider l'IA à trier. Il faudrait également.
