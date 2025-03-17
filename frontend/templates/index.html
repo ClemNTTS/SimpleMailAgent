@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Assistant IA de Gestion des Emails</title>
+    <link rel="stylesheet" href="/static/css/style.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+    />
+  </head>
+  <body>
+    <div class="app-container">
+      <!-- Sidebar -->
+      <aside class="sidebar">
+        <div class="sidebar-header">
+          <h2>📧 Email Assistant</h2>
+          <div class="user-info">
+            <span id="username">Chargement...</span>
+          </div>
+        </div>
+
+        <nav class="sidebar-nav">
+          <button id="fetch-emails" class="btn-primary">
+            <i class="fas fa-sync"></i> Récupérer les nouveaux mails
+          </button>
+
+          <div class="nav-section">
+            <h3>Catégories</h3>
+            <ul>
+              <li class="active" data-category="important">
+                <i class="fas fa-star"></i> Importants
+              </li>
+              <li data-category="pub"><i class="fas fa-ad"></i> Publicités</li>
+              <li data-category="automatique">
+                <i class="fas fa-robot"></i> Automatiques
+              </li>
+            </ul>
+          </div>
+
+          <div class="nav-section">
+            <h3>Actions</h3>
+            <ul>
+              <li id="fetch-emails">
+                <i class="fas fa-sync"></i>
+                Récupérer les nouveaux mails
+              </li>
+              <li id="delete-pub-btn">
+                <i class="fas fa-trash"></i>
+                Supprimer les pubs
+              </li>
+              <li id="settings-btn">
+                <i class="fas fa-cog"></i>
+                Paramètres
+              </li>
+              <li id="logout-btn">
+                <i class="fas fa-sign-out-alt"></i>
+                Déconnexion
+              </li>
+            </ul>
+          </div>
+        </nav>
+      </aside>
+
+      <!-- Main Content -->
+      <main class="main-content">
+        <header class="main-header">
+          <h1>Gestionnaire d'Emails</h1>
+          <div class="stats-container">
+            <div class="stat-card">
+              <i class="fas fa-star"></i>
+              <span id="important-count">0</span>
+              <span>Importants</span>
+            </div>
+            <div class="stat-card">
+              <i class="fas fa-ad"></i>
+              <span id="pub-count">0</span>
+              <span>Publicités</span>
+            </div>
+            <div class="stat-card">
+              <i class="fas fa-robot"></i>
+              <span id="automatique-count">0</span>
+              <span>Automatiques</span>
+            </div>
+          </div>
+        </header>
+
+        <div class="emails-container">
+          <!-- Les emails seront chargés dynamiquement ici -->
+        </div>
+      </main>
+    </div>
+
+    <!-- Modal de configuration IMAP -->
+    <div id="settings-modal" class="modal">
+      <div class="modal-content">
+        <h2>Configuration IMAP</h2>
+        <form id="imap-settings-form">
+          <div class="form-group">
+            <label for="email">Adresse email</label>
+            <input type="email" id="email" required />
+          </div>
+          <div class="form-group">
+            <label for="imap-password">Mot de passe IMAP</label>
+            <input type="password" id="imap-password" required />
+          </div>
+          <div class="form-group">
+            <label for="imap-server">Serveur IMAP</label>
+            <input
+              type="text"
+              id="imap-server"
+              value="imap.gmail.com"
+              required
+            />
+          </div>
+          <div class="form-actions">
+            <button type="button" class="btn-secondary" id="close-settings">
+              Annuler
+            </button>
+            <button type="submit" class="btn-primary">Enregistrer</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <script src="/static/js/main.js"></script>
+  </body>
+</html>

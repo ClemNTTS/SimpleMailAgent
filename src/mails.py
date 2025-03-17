@@ -73,17 +73,31 @@ def classer_mails(mails):
     return mails_classes
 
 
-def envoyer_email(destinataire, sujet, message):
-    """Envoie un email"""
-    msg = MIMEText(message)
-    msg['Subject'] = sujet
-    msg['From'] = SMTP_USER
-    msg['To'] = destinataire
+def envoyer_email(destinataire, sujet, message, reponse_automatique=False):
+    """Envoie un email avec gestion des réponses automatiques"""
+    try:
+        # Préparation du message
+        msg = MIMEText(message)
+        msg['Subject'] = f"Re: {sujet}" if reponse_automatique else sujet
+        msg['From'] = SMTP_USER
+        msg['To'] = destinataire
+        
+        # Ajout d'un en-tête pour les réponses automatiques
+        if reponse_automatique:
+            msg['Auto-Submitted'] = 'auto-replied'
+            msg['X-Auto-Response-Suppress'] = 'OOF, AutoReply'
 
-    with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
-        server.starttls()
-        server.login(SMTP_USER, SMTP_PASSWORD)
-        server.sendmail(SMTP_USER, destinataire, msg.as_string())
+        # Connexion et envoi
+        with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
+            server.starttls()
+            server.login(SMTP_USER, SMTP_PASSWORD)
+            server.sendmail(SMTP_USER, destinataire, msg.as_string())
+            
+        print(f"Email envoyé avec succès à {destinataire}")
+        return True
+    except Exception as e:
+        print(f"Erreur lors de l'envoi de l'email : {str(e)}")
+        return False
 
 class MailFetcher:
     def __init__(self, email_address, password, imap_server="imap.gmail.com"):
@@ -201,7 +215,7 @@ class MailFetcher:
                     
                     if content:  # N'ajouter que si le contenu a été extrait avec succès
                         emails.append({
-                            "sujet": subject,
+                            "objet": subject,
                             "expediteur": from_addr,
                             "contenu": content,
                             "date_reception": date
@@ -222,25 +236,125 @@ class MailFetcher:
         finally:
             self.disconnect()
 
-def get_user_emails(user_id):
-    """Récupère les mails d'un utilisateur depuis sa boîte mail"""
+def get_imap_credentials(user_id):
+    """Récupère les informations IMAP d'un utilisateur"""
     try:
-        # Récupérer les informations de connexion de l'utilisateur depuis la base de données
-        conn = sqlite3.connect('mails.db')
+        conn = sqlite3.connect('auth.db')
         c = conn.cursor()
         c.execute('SELECT email, imap_password, imap_server FROM users WHERE id = ?', (user_id,))
-        user_info = c.fetchone()
+        result = c.fetchone()
         conn.close()
         
-        if not user_info:
-            print("Utilisateur non trouvé")
-            return []
+        if not result:
+            print(f"Utilisateur {user_id} non trouvé")
+            return None
+            
+        email, password, server = result
         
-        email_address, password, imap_server = user_info
-        
-        # Créer une instance de MailFetcher et récupérer les mails
-        fetcher = MailFetcher(email_address, password, imap_server)
-        return fetcher.fetch_emails()
+        if not email or not password:
+            print(f"Informations IMAP incomplètes pour l'utilisateur {user_id}")
+            return None
+            
+        return {
+            'email': email,
+            'password': password,
+            'server': server or 'imap.gmail.com'
+        }
+    except sqlite3.Error as e:
+        print(f"Erreur de base de données lors de la récupération des informations IMAP : {e}")
+        return None
     except Exception as e:
-        print(f"Erreur lors de la récupération des mails : {str(e)}")
-        return []
+        print(f"Erreur inattendue lors de la récupération des informations IMAP : {e}")
+        return None
+
+def decode_email_header(header):
+    """Décode l'en-tête d'un email"""
+    decoded_header = decode_header(header)
+    header_parts = []
+    for content, encoding in decoded_header:
+        if isinstance(content, bytes):
+            if encoding:
+                header_parts.append(content.decode(encoding))
+            else:
+                header_parts.append(content.decode())
+        else:
+            header_parts.append(content)
+    return ' '.join(header_parts)
+
+def get_email_body(msg):
+    """Extrait le corps d'un email"""
+    if msg.is_multipart():
+        for part in msg.walk():
+            if part.get_content_type() == "text/plain":
+                return part.get_payload(decode=True).decode()
+    else:
+        return msg.get_payload(decode=True).decode()
+    return ""
+
+def get_user_emails(user_id):
+    """Récupère les 10 derniers emails non lus d'un utilisateur via IMAP"""
+    try:
+        credentials = get_imap_credentials(user_id)
+        if not credentials:
+            raise ValueError("Informations IMAP non configurées")
+
+        # Utilisation de la classe MailFetcher
+        mail_fetcher = MailFetcher(
+            email_address=credentials['email'],
+            password=credentials['password'],
+            imap_server=credentials['server']
+        )
+        
+        # Récupération des 10 derniers mails non lus
+        emails = mail_fetcher.fetch_emails(folder="INBOX", limit=10)
+        
+        if not emails:
+            print("Aucun email non lu trouvé")
+            return []
+            
+        # Analyse IA des emails
+        from src.agent import analyser_mail, generer_reponse_automatique
+        from src.db import ajouter_mail
+        
+        emails_analyses = []
+        for email in emails:
+            try:
+                # Analyse du mail avec l'agent IA
+                categorie = analyser_mail(email['contenu'], email['expediteur'], user_id)
+                
+                # Ajout de la catégorie à l'email
+                email['categorie'] = categorie
+                
+                # Génération et envoi de la réponse automatique si nécessaire
+                if categorie == "automatique":
+                    reponse = generer_reponse_automatique(email['contenu'], email['expediteur'])
+                    email['reponse_automatique'] = reponse
+                    
+                    # Envoi de la réponse automatique
+                    if envoyer_email(
+                        email['expediteur'],
+                        email['objet'],
+                        reponse,
+                        reponse_automatique=True
+                    ):
+                        print(f"Réponse automatique envoyée pour l'email : {email['objet']}")
+                    else:
+                        print(f"Échec de l'envoi de la réponse automatique pour : {email['objet']}")
+                
+                # Ajout dans la base de données
+                if ajouter_mail(email, user_id):
+                    emails_analyses.append(email)
+                    print(f"Email analysé et ajouté avec succès : {email['objet']} (catégorie: {categorie})")
+                else:
+                    print(f"Email déjà existant ou erreur lors de l'ajout : {email['objet']}")
+                    
+            except Exception as e:
+                print(f"Erreur lors de l'analyse de l'email {email['objet']}: {str(e)}")
+                continue
+                
+        print(f"Nombre d'emails analysés avec succès: {len(emails_analyses)}")
+        return emails_analyses
+
+    except Exception as e:
+        print(f"Erreur lors de la récupération des emails: {e}")
+        return None
