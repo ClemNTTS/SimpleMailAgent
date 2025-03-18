@@ -96,35 +96,69 @@
       </main>
     </div>
 
-    <!-- Modal de configuration IMAP -->
+    <!-- Modal des paramètres IMAP -->
     <div id="settings-modal" class="modal">
       <div class="modal-content">
-        <h2>Configuration IMAP</h2>
-        <form id="imap-settings-form">
-          <div class="form-group">
-            <label for="email">Adresse email</label>
-            <input type="email" id="email" required />
-          </div>
-          <div class="form-group">
-            <label for="imap-password">Mot de passe IMAP</label>
-            <input type="password" id="imap-password" required />
-          </div>
-          <div class="form-group">
-            <label for="imap-server">Serveur IMAP</label>
-            <input
-              type="text"
-              id="imap-server"
-              value="imap.gmail.com"
-              required
-            />
-          </div>
-          <div class="form-actions">
-            <button type="button" class="btn-secondary" id="close-settings">
-              Annuler
-            </button>
-            <button type="submit" class="btn-primary">Enregistrer</button>
-          </div>
-        </form>
+        <div class="modal-header">
+          <h2>Paramètres IMAP</h2>
+          <button id="close-settings" class="close-btn">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div class="modal-body">
+          <form id="imap-settings-form">
+            <div class="form-group">
+              <label for="email">Email :</label>
+              <input type="email" id="email" required />
+            </div>
+            <div class="form-group">
+              <label for="imap-password">Mot de passe IMAP :</label>
+              <input type="password" id="imap-password" required />
+            </div>
+            <div class="form-group">
+              <label for="imap-server">Serveur IMAP :</label>
+              <input type="text" id="imap-server" required />
+            </div>
+            <div class="form-actions">
+              <button type="submit" class="btn btn-primary">
+                <i class="fas fa-save"></i> Enregistrer
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal de réponse -->
+    <div id="reply-modal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>Répondre à l'email</h2>
+          <button id="close-reply-modal" class="close-btn">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div class="modal-body">
+          <form id="reply-form">
+            <div class="form-group">
+              <label for="reply-to">À :</label>
+              <input type="email" id="reply-to" readonly />
+            </div>
+            <div class="form-group">
+              <label for="reply-subject">Objet :</label>
+              <input type="text" id="reply-subject" readonly />
+            </div>
+            <div class="form-group">
+              <label for="reply-content">Message :</label>
+              <textarea id="reply-content" rows="10" required></textarea>
+            </div>
+            <div class="form-actions">
+              <button type="submit" class="btn btn-primary">
+                <i class="fas fa-paper-plane"></i> Envoyer
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
 

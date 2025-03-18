@@ -14,7 +14,7 @@ app.secret_key = os.urandom(24)
 
 # Initialisation des bases de données
 init_auth_db()
-init_db()
+init_db()   
 
 def login_required(f):
     @wraps(f)
@@ -203,6 +203,56 @@ def delete_pub_emails():
         return jsonify({
             'error': 'Erreur lors de la suppression des mails pub'
         }), 500
+
+@app.route("/api/emails/<int:email_id>", methods=["DELETE"])
+@login_required
+def delete_email(email_id):
+    try:
+        # Supprimer l'email de la base de données
+        conn = sqlite3.connect("mails.db")
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM mails WHERE id = ? AND user_id = ?", (email_id, session["user_id"]))
+        conn.commit()
+        conn.close()
+
+        return jsonify({"message": "Email supprimé avec succès"}), 200
+    except Exception as e:
+        print(f"Erreur lors de la suppression de l'email: {e}")
+        return jsonify({"error": "Erreur lors de la suppression de l'email"}), 500
+
+@app.route("/api/emails/<int:email_id>", methods=["GET"])
+@login_required
+def get_email(email_id):
+    try:
+        conn = sqlite3.connect("mails.db")
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT id, user_id, expediteur, objet, contenu, date_reception, categorie, reponse_automatique 
+            FROM mails 
+            WHERE id = ? AND user_id = ?
+        """, (email_id, session["user_id"]))
+        email = cursor.fetchone()
+        conn.close()
+
+        if not email:
+            return jsonify({"error": "Email non trouvé"}), 404
+
+        # Convertir le tuple en dictionnaire avec les bons noms de champs
+        email_dict = {
+            "id": email[0],
+            "user_id": email[1],
+            "expediteur": email[2],
+            "objet": email[3],
+            "contenu": email[4],
+            "date_reception": email[5],
+            "categorie": email[6],
+            "reponse_automatique": email[7]
+        }
+
+        return jsonify(email_dict), 200
+    except Exception as e:
+        print(f"Erreur lors de la récupération de l'email: {e}")
+        return jsonify({"error": "Erreur lors de la récupération de l'email"}), 500
 
 def init_db():
     """Initialise la base de données si elle n'existe pas"""

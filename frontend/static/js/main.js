@@ -1,6 +1,5 @@
 // État de l'application
 let currentCategory = "important";
-let emails = [];
 
 // Éléments DOM
 const usernameElement = document.getElementById("username");
@@ -13,6 +12,9 @@ const logoutBtn = document.getElementById("logout-btn");
 const emailsContainer = document.querySelector(".emails-container");
 const categoryButtons = document.querySelectorAll(".nav-section li");
 const deletePubBtn = document.getElementById("delete-pub-btn");
+const replyModal = document.getElementById("reply-modal");
+const closeReplyModalBtn = document.getElementById("close-reply-modal");
+const replyForm = document.getElementById("reply-form");
 
 // Fonctions utilitaires
 function formatDate(dateString) {
@@ -54,6 +56,18 @@ function createEmailCard(email) {
       <div class="email-content">
         ${email.contenu}
         ${reponseAutomatique}
+      </div>
+      <div class="email-actions">
+        <button class="email-action-btn delete" onclick="deleteEmail('${
+          email.id
+        }')">
+          <i class="fas fa-trash"></i> Supprimer
+        </button>
+        <button class="email-action-btn reply" onclick="replyToEmail('${
+          email.id
+        }')">
+          <i class="fas fa-reply"></i> Répondre
+        </button>
       </div>
     </div>
   `;
@@ -138,8 +152,6 @@ fetchEmailsBtn.addEventListener("click", async () => {
     if (!response.ok)
       throw new Error("Erreur lors de la récupération des emails");
 
-    const data = await response.json();
-    emails = data.emails;
     updateStats();
     displayEmails();
 
@@ -205,8 +217,7 @@ logoutBtn.addEventListener("click", async () => {
   }
 });
 
-async function handleEmailClick(event, expediteur) {
-  // Empêcher la propagation de l'événement
+window.handleEmailClick = async function (event, expediteur) {
   event.stopPropagation();
 
   try {
@@ -228,7 +239,7 @@ async function handleEmailClick(event, expediteur) {
     console.error("Erreur:", error);
     showNotification("Erreur lors du marquage de l'expéditeur", "error");
   }
-}
+};
 
 function showNotification(message, type = "info") {
   const notification = document.createElement("div");
@@ -243,14 +254,6 @@ function showNotification(message, type = "info") {
 }
 
 async function deletePubEmails() {
-  if (
-    !confirm(
-      "Êtes-vous sûr de vouloir supprimer tous les mails de catégorie pub ?"
-    )
-  ) {
-    return;
-  }
-
   try {
     deletePubBtn.disabled = true;
     deletePubBtn.innerHTML =
@@ -283,6 +286,78 @@ async function deletePubEmails() {
 // Gestionnaires d'événements
 deletePubBtn.addEventListener("click", deletePubEmails);
 
+// Rendre les fonctions accessibles globalement
+window.deleteEmail = async function (emailId) {
+  try {
+    const response = await fetch(`/api/emails/${emailId}`, {
+      method: "DELETE",
+    });
+
+    if (!response.ok) {
+      throw new Error("Erreur lors de la suppression de l'email");
+    }
+
+    showNotification("Email supprimé avec succès", "success");
+    displayEmails(); // Rafraîchir l'affichage
+    updateStats(); // Mettre à jour les statistiques
+  } catch (error) {
+    console.error("Erreur:", error);
+    showNotification("Erreur lors de la suppression de l'email", "error");
+  }
+};
+
+window.replyToEmail = async function (emailId) {
+  try {
+    const response = await fetch(`/api/emails/${emailId}`);
+    if (!response.ok) {
+      throw new Error("Erreur lors de la récupération de l'email");
+    }
+
+    const email = await response.json();
+
+    // Remplir le formulaire avec les informations de l'email
+    document.getElementById("reply-to").value = email.expediteur;
+    document.getElementById("reply-subject").value = `Re: ${email.objet}`;
+    document.getElementById("reply-content").value = "";
+
+    // Afficher le modal
+    replyModal.classList.add("active");
+  } catch (error) {
+    console.error("Erreur:", error);
+    showNotification("Erreur lors de la préparation de la réponse", "error");
+  }
+};
+
+// Gestionnaire pour fermer le modal de réponse
+closeReplyModalBtn.addEventListener("click", () => {
+  replyModal.classList.remove("active");
+});
+
+// Fermer le modal en cliquant en dehors
+replyModal.addEventListener("click", (e) => {
+  if (e.target === replyModal) {
+    replyModal.classList.remove("active");
+  }
+});
+
+// Gestionnaire pour l'envoi de la réponse
+replyForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  const to = document.getElementById("reply-to").value;
+  const subject = document.getElementById("reply-subject").value;
+  const content = document.getElementById("reply-content").value;
+
+  // Créer le lien mailto avec le contenu
+  const mailtoLink = `mailto:${to}?subject=${encodeURIComponent(
+    subject
+  )}&body=${encodeURIComponent(content)}`;
+  window.location.href = mailtoLink;
+
+  // Fermer le modal
+  replyModal.classList.remove("active");
+});
+
 // Initialisation
 async function init() {
   try {
@@ -301,7 +376,6 @@ async function init() {
     if (!emailsResponse.ok)
       throw new Error("Erreur lors de la récupération des emails");
 
-    emails = await emailsResponse.json();
     updateStats();
     displayEmails();
   } catch (error) {

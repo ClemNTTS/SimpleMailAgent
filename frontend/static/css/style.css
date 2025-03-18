@@ -1,8 +1,17 @@
 :root {
-  --primary-color: #2563eb;
-  --secondary-color: #64748b;
-  --danger-color: #ef4444;
-  --success-color: #22c55e;
+  --primary-color: #007bff;
+  --secondary-color: #6c757d;
+  --success-color: #28a745;
+  --danger-color: #dc3545;
+  --warning-color: #ffc107;
+  --info-color: #17a2b8;
+  --light-color: #f8f9fa;
+  --dark-color: #343a40;
+  --white-color: #ffffff;
+  --gray-color: #6c757d;
+  --gray-dark-color: #343a40;
+  --primary-bg: #f8f9fa;
+  --secondary-bg: #e9ecef;
   --background-color: #f8fafc;
   --sidebar-bg: #1e293b;
   --text-primary: #1e293b;
@@ -14,12 +23,20 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+html {
+  font-size: 16px;
+  line-height: 1.5;
 }
 
 body {
-  font-family: "Inter", sans-serif;
-  background-color: var(--background-color);
-  color: var(--text-primary);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
+  background-color: var(--primary-bg);
+  color: var(--dark-color);
   line-height: 1.5;
 }
 
@@ -32,14 +49,14 @@ body {
 /* Sidebar Styles */
 .sidebar {
   width: 280px;
-  background-color: var(--sidebar-bg);
+  background-color: var(--white-color);
   padding: 1.5rem;
   display: flex;
   flex-direction: column;
   position: fixed;
   height: 100vh;
   overflow-y: auto;
-  border-right: 1px solid var(--border-color);
+  border-right: 1px solid var(--secondary-bg);
 }
 
 .sidebar-header {
@@ -100,12 +117,12 @@ body {
 }
 
 .nav-section li:hover {
-  background-color: rgba(255, 255, 255, 0.1);
+  background-color: var(--secondary-bg);
 }
 
 .nav-section li.active {
   background-color: var(--primary-color);
-  color: white;
+  color: var(--white-color);
 }
 
 .nav-section li i {
@@ -132,17 +149,17 @@ body {
 
 .btn-primary {
   background-color: var(--primary-color);
-  color: white;
+  color: var(--white-color);
 }
 
 .btn-secondary {
-  background-color: rgba(255, 255, 255, 0.1);
-  color: white;
+  background-color: var(--secondary-color);
+  color: var(--white-color);
 }
 
 .btn-danger {
   background-color: var(--danger-color);
-  color: white;
+  color: var(--white-color);
 }
 
 .btn-primary:hover,
@@ -158,6 +175,7 @@ body {
   margin-left: 280px; /* Largeur de la sidebar */
   overflow-y: auto;
   height: 100vh;
+  background-color: var(--primary-bg);
 }
 
 .main-header {
@@ -176,7 +194,7 @@ body {
 }
 
 .stat-card {
-  background-color: white;
+  background-color: var(--white-color);
   padding: 1.5rem;
   border-radius: 0.5rem;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
@@ -204,14 +222,29 @@ body {
 /* Email Container Styles */
 .emails-container {
   display: grid;
-  gap: 1rem;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+  padding: 20px;
+  background-color: var(--primary-bg);
 }
 
 .email-card {
-  background-color: white;
-  border-radius: 0.5rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
+  background-color: var(--white-color);
+  border-radius: 10px;
+  padding: 15px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease-in-out;
+  display: flex;
+  flex-direction: column;
+}
+
+.email-card:hover {
+  transform: translateY(-2px);
+}
+
+.email-card.important {
+  background-color: #fff3cd;
+  border-left: 4px solid var(--warning-color);
 }
 
 .email-header {
@@ -236,6 +269,26 @@ body {
   padding: 1rem;
   max-height: 300px;
   overflow-y: auto;
+  flex-grow: 1;
+  scrollbar-width: thin;
+  scrollbar-color: var(--primary-color) transparent;
+}
+
+.email-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.email-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.email-content::-webkit-scrollbar-thumb {
+  background-color: var(--primary-color);
+  border-radius: 3px;
+}
+
+.email-content::-webkit-scrollbar-thumb:hover {
+  background-color: #0056b3;
 }
 
 .email-response {
@@ -265,6 +318,42 @@ body {
   white-space: pre-wrap;
 }
 
+.email-actions {
+  display: flex;
+  gap: 10px;
+  padding: 10px;
+  border-top: 1px solid var(--border-color);
+  margin-top: auto;
+}
+
+.email-action-btn {
+  flex: 1;
+  padding: 8px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  font-size: 0.9rem;
+  transition: background-color 0.2s;
+}
+
+.email-action-btn.delete {
+  background-color: var(--danger-color);
+  color: white;
+}
+
+.email-action-btn.reply {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+.email-action-btn:hover {
+  opacity: 0.9;
+}
+
 /* Modal Styles */
 .modal {
   display: none;
@@ -274,49 +363,81 @@ body {
   width: 100%;
   height: 100%;
   background-color: rgba(0, 0, 0, 0.5);
-  align-items: center;
-  justify-content: center;
+  z-index: 1000;
 }
 
 .modal.active {
   display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .modal-content {
   background-color: white;
-  padding: 2rem;
-  border-radius: 0.5rem;
-  width: 100%;
+  border-radius: 8px;
+  width: 90%;
   max-width: 500px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
-.modal-content h2 {
-  margin-bottom: 1.5rem;
+.modal-header {
+  padding: 1.5rem;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  color: #333;
+}
+
+.modal-body {
+  padding: 1.5rem;
 }
 
 .form-group {
-  margin-bottom: 1rem;
+  margin-bottom: 1.5rem;
 }
 
 .form-group label {
   display: block;
   margin-bottom: 0.5rem;
+  color: #666;
   font-weight: 500;
 }
 
 .form-group input {
   width: 100%;
   padding: 0.75rem;
-  border: 1px solid var(--border-color);
-  border-radius: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
   font-size: 1rem;
 }
 
 .form-actions {
   display: flex;
-  gap: 1rem;
   justify-content: flex-end;
+  gap: 1rem;
   margin-top: 1.5rem;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  color: #666;
+  padding: 0.5rem;
+  transition: color 0.2s;
+}
+
+.close-btn:hover {
+  color: #333;
 }
 
 /* Responsive Design */
@@ -382,4 +503,11 @@ body {
 
 .email-sender:hover {
   color: #0056b3;
+}
+
+/* Suppression des propriétés obsolètes */
+@media screen and (-webkit-min-device-pixel-ratio: 1) {
+  img {
+    image-rendering: -webkit-optimize-contrast;
+  }
 }
