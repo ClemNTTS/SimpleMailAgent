@@ -79,20 +79,36 @@ async function updateStats() {
       important: 0,
       pub: 0,
       automatique: 0,
+      unread: 0,
     };
 
+    // Récupérer le nombre de mails non lus
+    const unreadResponse = await fetch("/api/unread-count");
+    if (!unreadResponse.ok) {
+      throw new Error(
+        "Erreur lors de la récupération du nombre de mails non lus"
+      );
+    }
+    const unreadData = await unreadResponse.json();
+    stats.unread = unreadData.count;
+
+    // Récupérer les statistiques par catégorie
     for (const categorie in stats) {
-      const response = await fetch(`/api/emails?categorie=${categorie}`);
-      if (!response.ok)
-        throw new Error("Erreur lors de la récupération des statistiques");
-      const emails = await response.json();
-      stats[categorie] = emails.length;
+      if (categorie !== "unread") {
+        const response = await fetch(`/api/emails?categorie=${categorie}`);
+        if (!response.ok) {
+          throw new Error("Erreur lors de la récupération des statistiques");
+        }
+        const emails = await response.json();
+        stats[categorie] = emails.length;
+      }
     }
 
     document.getElementById("important-count").textContent = stats.important;
     document.getElementById("pub-count").textContent = stats.pub;
     document.getElementById("automatique-count").textContent =
       stats.automatique;
+    document.getElementById("unread-count").textContent = stats.unread;
   } catch (error) {
     console.error("Erreur:", error);
   }
@@ -165,8 +181,29 @@ fetchEmailsBtn.addEventListener("click", async () => {
   }
 });
 
+async function loadUserSettings() {
+  try {
+    const response = await fetch("/api/get-settings");
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || "Erreur lors du chargement des paramètres");
+    }
+
+    // Remplir les champs du formulaire
+    document.getElementById("email").value = data.email;
+    document.getElementById("imap-server").value = data.imap_server;
+    document.getElementById("gemini-api-key").value = data.gemini_api_key;
+  } catch (error) {
+    console.error("Erreur:", error);
+    showNotification(error.message, "error");
+  }
+}
+
+// Charger les paramètres lors de l'ouverture de la modale
 settingsBtn.addEventListener("click", () => {
   settingsModal.classList.add("active");
+  loadUserSettings();
 });
 
 closeSettingsBtn.addEventListener("click", () => {
@@ -180,10 +217,11 @@ imapSettingsForm.addEventListener("submit", async (e) => {
     email: document.getElementById("email").value,
     imap_password: document.getElementById("imap-password").value,
     imap_server: document.getElementById("imap-server").value,
+    gemini_api_key: document.getElementById("gemini-api-key").value,
   };
 
   try {
-    const response = await fetch("/api/update-imap", {
+    const response = await fetch("/api/update-settings", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -191,30 +229,32 @@ imapSettingsForm.addEventListener("submit", async (e) => {
       body: JSON.stringify(formData),
     });
 
-    if (!response.ok)
-      throw new Error("Erreur lors de la mise à jour des paramètres IMAP");
+    const data = await response.json();
 
+    if (!response.ok) {
+      throw new Error(
+        data.error ||
+          "Une erreur est survenue lors de la mise à jour des paramètres"
+      );
+    }
+
+    showNotification(data.message, "success");
+    if (data.test_message) {
+      showNotification(data.test_message, "info");
+    }
     settingsModal.classList.remove("active");
-    alert("Paramètres IMAP mis à jour avec succès");
   } catch (error) {
     console.error("Erreur:", error);
-    alert("Une erreur est survenue lors de la mise à jour des paramètres IMAP");
+    showNotification(
+      error.message ||
+        "Une erreur est survenue lors de la mise à jour des paramètres",
+      "error"
+    );
   }
 });
 
-logoutBtn.addEventListener("click", async () => {
-  try {
-    const response = await fetch("/api/logout", {
-      method: "POST",
-    });
-
-    if (!response.ok) throw new Error("Erreur lors de la déconnexion");
-
-    window.location.href = "/login";
-  } catch (error) {
-    console.error("Erreur:", error);
-    alert("Une erreur est survenue lors de la déconnexion");
-  }
+logoutBtn.addEventListener("click", () => {
+  window.location.href = "/logout";
 });
 
 window.handleEmailClick = async function (event, expediteur) {
@@ -348,14 +388,30 @@ replyForm.addEventListener("submit", async (e) => {
   const subject = document.getElementById("reply-subject").value;
   const content = document.getElementById("reply-content").value;
 
-  // Créer le lien mailto avec le contenu
-  const mailtoLink = `mailto:${to}?subject=${encodeURIComponent(
-    subject
-  )}&body=${encodeURIComponent(content)}`;
-  window.location.href = mailtoLink;
+  try {
+    const response = await fetch("/api/send-email", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        to,
+        subject,
+        content,
+      }),
+    });
 
-  // Fermer le modal
-  replyModal.classList.remove("active");
+    if (!response.ok) {
+      throw new Error("Erreur lors de l'envoi de l'email");
+    }
+
+    const data = await response.json();
+    showNotification(data.message, "success");
+    replyModal.classList.remove("active");
+  } catch (error) {
+    console.error("Erreur:", error);
+    showNotification("Erreur lors de l'envoi de l'email", "error");
+  }
 });
 
 // Initialisation

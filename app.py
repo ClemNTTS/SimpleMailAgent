@@ -1,7 +1,7 @@
 from flask import Flask, render_template, jsonify, request, redirect, url_for, session
 from src.db import init_db, get_mails, get_mails_par_categorie, ajouter_mail, reset_mails_table, marquer_expediteur_pub, supprimer_mails_pub
 from src.auth import init_auth_db, login_user, register_user, update_user_email, get_user as get_user_auth
-from src.mails import get_user_emails, get_imap_credentials
+from src.mails import get_user_emails, get_imap_credentials, get_unread_count, envoyer_email, test_imap_connection, update_imap_settings, update_gemini_api_key, get_gemini_api_key
 from src.agent import analyser_mail
 import os
 from functools import wraps
@@ -27,7 +27,20 @@ def login_required(f):
 @app.route('/')
 @login_required
 def index():
+    # Vérifier si l'utilisateur a configuré ses informations IMAP
+    credentials = get_imap_credentials(session['user_id'])
+    if not credentials or not credentials.get('email') or not credentials.get('password'):
+        return redirect(url_for('setup_imap'))
     return render_template('index.html')
+
+@app.route('/setup-imap')
+@login_required
+def setup_imap():
+    # Vérifier si l'utilisateur a déjà configuré ses informations IMAP
+    credentials = get_imap_credentials(session['user_id'])
+    if credentials and credentials.get('email') and credentials.get('password'):
+        return redirect(url_for('index'))
+    return render_template('setup_imap.html')
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -74,6 +87,19 @@ def get_user():
     except Exception as e:
         print(f"Erreur lors de la récupération de l'utilisateur : {e}")
         return jsonify({'error': 'Erreur serveur'}), 500
+    
+@app.route('/api/unread-count')
+@login_required
+def get_unread_mails_count():
+    try:
+        print(f"Récupération du nombre de mails non lus pour l'utilisateur {session['user_id']}")
+        count = get_unread_count(session['user_id'])
+        print(f"Nombre de mails non lus : {count}")
+        return jsonify({'count': count})
+    except Exception as e:
+        print(f"Erreur lors de la récupération du nombre de mails non lus : {str(e)}")
+        return jsonify({'error': 'Erreur serveur', 'details': str(e)}), 500
+
 
 @app.route('/api/emails')
 @login_required
@@ -147,31 +173,44 @@ def fetch_emails():
             'message': 'Une erreur est survenue lors de la récupération des emails'
         }), 500
 
-@app.route('/api/update-imap', methods=['POST'])
+@app.route("/api/update-settings", methods=["POST"])
 @login_required
-def update_imap():
+def update_settings():
     try:
-        data = request.json
-        if not data or 'email' not in data or 'imap_password' not in data or 'imap_server' not in data:
-            return jsonify({'error': 'Données manquantes'}), 400
-            
-        success = update_user_email(
-            session['user_id'],
-            data['email'],
-            data['imap_password'],
-            data['imap_server']
-        )
+        data = request.get_json()
         
-        if success:
-            return jsonify({'message': 'Informations IMAP mises à jour avec succès'})
-        return jsonify({'error': 'Erreur lors de la mise à jour des informations IMAP'}), 400
+        if not data:
+            return jsonify({"error": "Aucune donnée reçue"}), 400
+            
+        if not all(key in data for key in ["email", "imap_password", "imap_server", "gemini_api_key"]):
+            return jsonify({"error": "Données manquantes"}), 400
+
+        # Test de la connexion IMAP
+        success, message = test_imap_connection(data["email"], data["imap_password"], data["imap_server"])
+        if not success:
+            return jsonify({"error": message}), 400
+
+        # Mise à jour des paramètres IMAP
+        if not update_imap_settings(session['user_id'], data["email"], data["imap_password"], data["imap_server"]):
+            return jsonify({"error": "Erreur lors de la mise à jour des paramètres IMAP"}), 500
+
+        # Mise à jour de la clé API Gemini
+        if not update_gemini_api_key(session['user_id'], data["gemini_api_key"]):
+            return jsonify({"error": "Erreur lors de la mise à jour de la clé API Gemini"}), 500
+
+        return jsonify({
+            "message": "Paramètres mis à jour avec succès",
+            "test_message": message
+        }), 200
+        
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        print(f"Erreur lors de la mise à jour des paramètres : {str(e)}")
+        return jsonify({"error": "Erreur serveur lors de la mise à jour des paramètres"}), 500
 
 @app.route('/logout')
 def logout():
     session.clear()
-    return jsonify({'message': 'Déconnexion réussie'})
+    return redirect(url_for('login'))
 
 @app.route('/api/mark-sender-pub', methods=['POST'])
 @login_required
@@ -253,6 +292,44 @@ def get_email(email_id):
     except Exception as e:
         print(f"Erreur lors de la récupération de l'email: {e}")
         return jsonify({"error": "Erreur lors de la récupération de l'email"}), 500
+
+@app.route("/api/send-email", methods=["POST"])
+@login_required
+def send_email():
+    try:
+        data = request.json
+        if not data or 'to' not in data or 'subject' not in data or 'content' not in data:
+            return jsonify({"error": "Données manquantes"}), 400
+
+        success = envoyer_email(
+            data['to'],
+            data['subject'],
+            data['content'],
+            user_id=session['user_id']
+        )
+
+        if success:
+            return jsonify({"message": "Email envoyé avec succès"}), 200
+        return jsonify({"error": "Erreur lors de l'envoi de l'email"}), 500
+
+    except Exception as e:
+        print(f"Erreur lors de l'envoi de l'email: {e}")
+        return jsonify({"error": "Erreur lors de l'envoi de l'email"}), 500
+
+@app.route("/api/get-settings")
+@login_required
+def get_settings():
+    try:
+        imap_settings = get_imap_credentials(session['user_id'])
+        gemini_api_key = get_gemini_api_key(session['user_id'])
+        
+        return jsonify({
+            "email": imap_settings["email"] if imap_settings else "",
+            "imap_server": imap_settings["imap_server"] if imap_settings else "",
+            "gemini_api_key": gemini_api_key or ""
+        }), 200
+    except Exception as e:
+        return jsonify({"error": f"Erreur lors de la récupération des paramètres : {str(e)}"}), 500
 
 def init_db():
     """Initialise la base de données si elle n'existe pas"""

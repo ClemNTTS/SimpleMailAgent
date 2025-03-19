@@ -26,6 +26,7 @@
         </div>
 
         <nav class="sidebar-nav">
+          <span>Mails non lus : <span id="unread-count">...</span></span>
           <button id="fetch-emails" class="btn-primary">
             <i class="fas fa-sync"></i> Récupérer les nouveaux mails
           </button>
@@ -46,10 +47,6 @@
           <div class="nav-section">
             <h3>Actions</h3>
             <ul>
-              <li id="fetch-emails">
-                <i class="fas fa-sync"></i>
-                Récupérer les nouveaux mails
-              </li>
               <li id="delete-pub-btn">
                 <i class="fas fa-trash"></i>
                 Supprimer les pubs
@@ -96,34 +93,109 @@
       </main>
     </div>
 
-    <!-- Modal des paramètres IMAP -->
+    <!-- Modal des paramètres -->
     <div id="settings-modal" class="modal">
       <div class="modal-content">
         <div class="modal-header">
-          <h2>Paramètres IMAP</h2>
+          <h2>Paramètres</h2>
           <button id="close-settings" class="close-btn">
             <i class="fas fa-times"></i>
           </button>
         </div>
         <div class="modal-body">
           <form id="imap-settings-form">
-            <div class="form-group">
-              <label for="email">Email :</label>
-              <input type="email" id="email" required />
+            <div class="settings-section">
+              <h3>Configuration IMAP</h3>
+              <div class="form-group">
+                <label for="email">Email Gmail</label>
+                <div class="input-group">
+                  <input type="email" id="email" name="email" required />
+                  <i
+                    class="fas fa-circle-question help-icon"
+                    data-tooltip="Entrez votre adresse email Gmail"
+                  ></i>
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="imap-password">Mot de passe d'application</label>
+                <div class="input-group">
+                  <input
+                    type="password"
+                    id="imap-password"
+                    name="imap-password"
+                    required
+                  />
+                  <i
+                    class="fas fa-circle-question help-icon"
+                    data-tooltip="Mot de passe spécifique généré dans les paramètres de sécurité de votre compte Google"
+                  ></i>
+                </div>
+                <div class="help-text">
+                  <p>Pour créer un mot de passe d'application :</p>
+                  <ol>
+                    <li>Allez sur votre compte Google</li>
+                    <li>Sécurité > Authentification à 2 facteurs</li>
+                    <li>En bas de page : "Mots de passe d'application"</li>
+                    <li>
+                      Générez un nouveau mot de passe pour "Autre (nom
+                      personnalisé)"
+                    </li>
+                  </ol>
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="imap-server">Serveur IMAP</label>
+                <div class="input-group">
+                  <input
+                    type="text"
+                    id="imap-server"
+                    name="imap-server"
+                    value="imap.gmail.com"
+                    required
+                  />
+                  <i
+                    class="fas fa-circle-question help-icon"
+                    data-tooltip="Serveur IMAP de Gmail (imap.gmail.com)"
+                  ></i>
+                </div>
+              </div>
             </div>
-            <div class="form-group">
-              <label for="imap-password">Mot de passe IMAP :</label>
-              <input type="password" id="imap-password" required />
+
+            <div class="settings-section">
+              <h3>Configuration IA</h3>
+              <div class="form-group">
+                <label for="gemini-api-key">Clé API Google Gemini</label>
+                <div class="input-group">
+                  <input
+                    type="password"
+                    id="gemini-api-key"
+                    name="gemini-api-key"
+                  />
+                  <i
+                    class="fas fa-circle-question help-icon"
+                    data-tooltip="Clé API pour la classification automatique des emails"
+                  ></i>
+                </div>
+                <div class="help-text">
+                  <p>Pour obtenir une clé API Google Gemini :</p>
+                  <ol>
+                    <li>
+                      Allez sur
+                      <a
+                        href="https://makersuite.google.com/app/apikey"
+                        target="_blank"
+                        >Google AI Studio</a
+                      >
+                    </li>
+                    <li>Connectez-vous avec votre compte Google</li>
+                    <li>Cliquez sur "Get API key"</li>
+                    <li>Copiez la clé générée</li>
+                  </ol>
+                </div>
+              </div>
             </div>
-            <div class="form-group">
-              <label for="imap-server">Serveur IMAP :</label>
-              <input type="text" id="imap-server" required />
-            </div>
-            <div class="form-actions">
-              <button type="submit" class="btn btn-primary">
-                <i class="fas fa-save"></i> Enregistrer
-              </button>
-            </div>
+
+            <button type="submit" class="btn btn-primary">Enregistrer</button>
           </form>
         </div>
       </div>

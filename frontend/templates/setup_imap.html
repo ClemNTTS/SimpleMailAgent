@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Configuration IMAP - EmailManager</title>
+    <link rel="stylesheet" href="/static/css/style.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+    />
+  </head>
+  <body class="setup-page">
+    <div class="container">
+      <div class="setup-container">
+        <h1>Configuration IMAP</h1>
+        <p class="setup-description">
+          Pour commencer à utiliser EmailManager, veuillez configurer vos
+          paramètres IMAP. Assurez-vous d'avoir activé l'authentification à deux
+          facteurs sur votre compte Gmail et d'avoir généré un mot de passe
+          d'application.
+        </p>
+
+        <form id="imap-settings-form" class="settings-form">
+          <div class="form-group">
+            <label for="email">Adresse email</label>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              required
+              placeholder="votre.email@gmail.com"
+            />
+            <div class="help-text">
+              <i class="fas fa-info-circle"></i>
+              Votre adresse email Gmail
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="imap-password">Mot de passe IMAP</label>
+            <input
+              type="password"
+              id="imap-password"
+              name="imap-password"
+              required
+              placeholder="Votre mot de passe d'application"
+            />
+            <div class="help-text">
+              <i class="fas fa-info-circle"></i>
+              Le mot de passe d'application généré dans les paramètres de
+              sécurité Google
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="imap-server">Serveur IMAP</label>
+            <input
+              type="text"
+              id="imap-server"
+              name="imap-server"
+              value="imap.gmail.com"
+              required
+            />
+            <div class="help-text">
+              <i class="fas fa-info-circle"></i>
+              Le serveur IMAP de votre fournisseur de messagerie (par défaut :
+              imap.gmail.com)
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="gemini-api-key">Clé API Google Gemini</label>
+            <input
+              type="password"
+              id="gemini-api-key"
+              name="gemini-api-key"
+              placeholder="Votre clé API Google Gemini (optionnel)"
+            />
+            <div class="help-text">
+              <i class="fas fa-info-circle"></i>
+              Votre clé API Google Gemini (optionnel)
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-primary">
+            <i class="fas fa-save"></i> Enregistrer
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <script src="/static/js/setup.js"></script>
+  </body>
+</html>

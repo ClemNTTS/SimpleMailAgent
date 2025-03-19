@@ -1,102 +1,172 @@
-# Agent IA d'Analyse de Sentiment
+# EmailManager 📧
 
-Un agent IA simple qui analyse le sentiment des messages et envoie des réponses automatiques par email.
+[![Python](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
+[![Flask](https://img.shields.io/badge/Flask-3.0.2-green.svg)](https://flask.palletsprojects.com/)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-## Description
+EmailManager is a modern web application for managing and automatically classifying your emails. It uses the Google Gemini API to intelligently analyze and categorize your emails.
 
-Cet agent utilise le modèle Gemma 2B d'Ollama pour analyser le sentiment des messages et envoyer des réponses automatiques par email. Il est capable de :
+## 🌟 Features
 
-- Analyser le sentiment d'un message (positif ou négatif)
-- Générer une réponse appropriée
-- Envoyer un email automatiquement
+- 🔐 **Secure Authentication**
 
-## Prérequis
+  - User registration and login
+  - Route protection with authentication
+  - Secure session management
 
-- Python 3.x
-- Ollama installé localement avec le modèle Gemma 2B
-- Un compte email configuré pour l'envoi de messages
+- 📥 **Simplified IMAP Setup**
 
-## Installation
+  - Gmail IMAP support
+  - One-step configuration
+  - Automatic connection testing
 
-1. Clonez le repository :
+- 🤖 **Smart Email Management**
 
-```bash
-git clone https://github.com/ClemNTTS/SimpleMailAgent
-cd SimpleMailAgent
+  - Automatic category classification
+  - Content analysis with Google Gemini
+  - Important email detection
+
+- ✉️ **Email Actions**
+
+  - Mark as read/unread
+  - Delete emails
+  - Mark senders as promotional
+
+- 🎨 **Modern Interface**
+  - Responsive design
+  - Dark/light theme
+  - Real-time notifications
+
+## 📋 Prerequisites
+
+- Python 3.8 or higher
+- A Gmail account with two-factor authentication enabled
+- A modern web browser
+- A Google Gemini API key (optional)
+
+## 🚀 Installation
+
+1. **Clone the repository**
+
+   ```bash
+   git clone https://github.com/your-username/emailmanager.git
+   cd emailmanager
+   ```
+
+2. **Create a virtual environment**
+
+   ```bash
+   python -m venv venv
+   source venv/bin/activate  # Linux/Mac
+   venv\Scripts\activate     # Windows
+   ```
+
+3. **Install dependencies**
+
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+4. **Configure environment variables**
+
+   ```bash
+   cp .env.example .env
+   # Edit .env with your settings
+   ```
+
+5. **Run the application**
+   ```bash
+   flask run
+   ```
+
+## 📝 Gmail Configuration
+
+1. **Enable two-factor authentication**
+
+   - Go to [Google Account Security](https://myaccount.google.com/security)
+   - Enable two-factor authentication
+
+2. **Create an application password**
+
+   - In Google security settings
+   - Go to "App passwords"
+   - Select "Other (Custom name)"
+   - Name it "EmailManager"
+   - Copy the generated password
+
+3. **Configure the application**
+   - Log in to EmailManager
+   - Go to settings
+   - Enter your Gmail address
+   - Paste the application password
+   - The default IMAP server is `imap.gmail.com`
+
+## 🔒 Security
+
+- 🔑 Password hashing with Werkzeug
+- 🛡️ Built-in CSRF protection
+- 🔐 Secure session management
+- 🔒 Secure API key storage
+- 🚫 SQL injection protection
+
+## 🛠️ Architecture
+
+```
+emailmanager/
+├── app.py              # Application entry point
+├── src/
+│   ├── auth.py        # Authentication management
+│   ├── mails.py       # Email handling
+│   ├── agent.py       # Artificial intelligence
+│   └── db.py          # Database management
+├── frontend/
+│   ├── static/
+│   │   ├── css/       # CSS styles
+│   │   └── js/        # JavaScript scripts
+│   └── templates/     # HTML templates
+└── requirements.txt   # Python dependencies
 ```
 
-2. Créez un environnement virtuel et activez-le :
+## 📊 Database
 
-```bash
-python -m venv venv
-source venv/bin/activate  # Linux/Mac
-.\venv\Scripts\activate   # Windows
-```
+The application uses SQLite with two main tables:
 
-3. Installez les dépendances :
+- **users**: User information storage
 
-```bash
-pip install -r requirements.txt
-```
+  - id, username, password, email, imap_password, imap_server, gemini_api_key
 
-4. Configurez les variables d'environnement :
-   Créez un fichier `.env` à la racine du projet avec les informations suivantes :
+- **mails**: Email storage
+  - id, user_id, subject, sender, date, content, category, is_read, is_pub
 
-```
-SMTP_SERVER=smtp.gmail.com
-SMTP_PORT=587
-SMTP_USER=votre.email@gmail.com
-SMTP_PASSWORD=votre_mot_de_passe_d_application
-```
+## 🤝 Contributing
 
-## Utilisation
+Contributions are welcome! Here's how to contribute:
 
-1. Lancez le programme :
+1. Fork the project
+2. Create a branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
 
-```bash
-python main.py
-```
+## 📫 Support
 
-2. Entrez le message à analyser
-3. Entrez l'adresse email du destinataire
-4. L'agent analysera le sentiment et enverra une réponse appropriée
+For any questions or issues:
 
-## Structure du Projet
+- Open an issue on GitHub
+- Contact the development team
+- Check the documentation
 
-- `main.py` : Programme principal
-- `requirements.txt` : Liste des dépendances
-- `.env` : Configuration des variables d'environnement
-- `.gitignore` : Fichiers ignorés par Git
+## 📜 License
 
-## Fonctionnalités
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-- Analyse de sentiment binaire (positif/négatif)
-- Génération de réponses automatiques
-- Envoi d'emails via SMTP
-- Interface en ligne de commande simple
+## ✨ Acknowledgments
 
-## Sécurité
+- [Flask](https://flask.palletsprojects.com/) - Lightweight web framework
+- [Google Gemini](https://ai.google.dev/) - AI API
+- [Font Awesome](https://fontawesome.com/) - Icons
+- The open source community
 
-- Les informations sensibles (email, mot de passe) sont stockées dans le fichier `.env`
-- Le fichier `.env` est ignoré par Git pour éviter les fuites d'informations
+---
 
-## Limitations
-
-- Analyse de sentiment binaire uniquement
-- Réponses prédéfinies
-- Pas d'apprentissage automatique
-- Pas de mémoire des conversations précédentes
-
-## Contribution
-
-Les contributions sont les bienvenues ! N'hésitez pas à :
-
-1. Fork le projet
-2. Créer une branche pour votre fonctionnalité
-3. Commiter vos changements
-4. Pousser vers la branche
-5. Ouvrir une Pull Request
-
-## Licence
-
-Ce projet est sous licence MIT.
+Made with ❤️ by a student developer

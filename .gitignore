@@ -1,5 +1,7 @@
 # Environnement virtuel
+venv/
 tuto/
+
 # Fichiers Python
 __pycache__/
 *.py[cod]
@@ -7,3 +9,32 @@ __pycache__/
 
 # Fichiers d'environnement
 .env
+.env.*
+
+# Bases de données
+*.db
+*.sqlite
+*.sqlite3
+
+# Logs
+*.log
+
+# Fichiers système
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Fichiers temporaires
+*.tmp
+*.bak
+*~
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/

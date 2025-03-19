@@ -73,13 +73,19 @@ def classer_mails(mails):
     return mails_classes
 
 
-def envoyer_email(destinataire, sujet, message, reponse_automatique=False):
+def envoyer_email(destinataire, sujet, message, reponse_automatique=False, user_id=None):
     """Envoie un email avec gestion des réponses automatiques"""
     try:
+        # Récupérer les informations IMAP de l'utilisateur
+        credentials = get_imap_credentials(user_id)
+        if not credentials:
+            print("Informations IMAP non configurées")
+            return False
+
         # Préparation du message
         msg = MIMEText(message)
         msg['Subject'] = f"Re: {sujet}" if reponse_automatique else sujet
-        msg['From'] = SMTP_USER
+        msg['From'] = credentials['email']
         msg['To'] = destinataire
         
         # Ajout d'un en-tête pour les réponses automatiques
@@ -87,11 +93,11 @@ def envoyer_email(destinataire, sujet, message, reponse_automatique=False):
             msg['Auto-Submitted'] = 'auto-replied'
             msg['X-Auto-Response-Suppress'] = 'OOF, AutoReply'
 
-        # Connexion et envoi
-        with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
+        # Connexion et envoi via Gmail SMTP
+        with smtplib.SMTP('smtp.gmail.com', 587) as server:
             server.starttls()
-            server.login(SMTP_USER, SMTP_PASSWORD)
-            server.sendmail(SMTP_USER, destinataire, msg.as_string())
+            server.login(credentials['email'], credentials['password'])
+            server.sendmail(credentials['email'], destinataire, msg.as_string())
             
         print(f"Email envoyé avec succès à {destinataire}")
         return True
@@ -335,7 +341,8 @@ def get_user_emails(user_id):
                         email['expediteur'],
                         email['objet'],
                         reponse,
-                        reponse_automatique=True
+                        reponse_automatique=True,
+                        user_id=user_id
                     ):
                         print(f"Réponse automatique envoyée pour l'email : {email['objet']}")
                     else:
@@ -358,3 +365,135 @@ def get_user_emails(user_id):
     except Exception as e:
         print(f"Erreur lors de la récupération des emails: {e}")
         return None
+    
+
+def get_unread_count(user_id):
+    """Récupère le nombre de mails non lus d'un utilisateur via IMAP"""
+    try:
+        credentials = get_imap_credentials(user_id)
+        if not credentials:
+            print("Informations IMAP non configurées")
+            return 0
+
+        print(f"Tentative de connexion IMAP pour {credentials['email']} sur {credentials['server']}")
+        mail_fetcher = MailFetcher(
+            email_address=credentials['email'],
+            password=credentials['password'],
+            imap_server=credentials['server']
+        )
+        
+        if not mail_fetcher.connect():
+            print("Échec de la connexion IMAP")
+            return 0
+        
+        try:
+            # Sélectionner le dossier INBOX
+            mail_fetcher.imap.select('INBOX')
+            
+            # Rechercher les mails non lus
+            _, messages = mail_fetcher.imap.search(None, 'UNSEEN')
+            unread_count = len(messages[0].split())
+            
+            print(f"Nombre de mails non lus trouvés : {unread_count}")
+            return unread_count
+            
+        except Exception as e:
+            print(f"Erreur lors de la recherche des mails non lus : {str(e)}")
+            return 0
+            
+        finally:
+            mail_fetcher.disconnect()
+    
+    except Exception as e:
+        print(f"Erreur lors de la récupération du nombre de mails non lus : {str(e)}")
+        return 0
+        
+
+def test_imap_connection(email, password, imap_server="imap.gmail.com"):
+    """Teste la connexion IMAP avec les paramètres fournis"""
+    try:
+        mail_fetcher = MailFetcher(
+            email_address=email,
+            password=password,
+            imap_server=imap_server
+        )
+        
+        if mail_fetcher.connect():
+            mail_fetcher.disconnect()
+            return True, "Connexion IMAP réussie"
+        return False, "Échec de la connexion IMAP"
+    except Exception as e:
+        return False, f"Erreur de connexion : {str(e)}"
+
+def update_imap_settings(user_id, email, imap_password, imap_server):
+    """Met à jour les paramètres IMAP d'un utilisateur"""
+    try:
+        conn = sqlite3.connect('auth.db')
+        c = conn.cursor()
+        
+        # Vérifier si l'utilisateur existe
+        c.execute('SELECT id FROM users WHERE id = ?', (user_id,))
+        if not c.fetchone():
+            print(f"Utilisateur {user_id} non trouvé")
+            return False
+            
+        # Mettre à jour les paramètres IMAP
+        c.execute('''UPDATE users 
+                    SET email = ?, imap_password = ?, imap_server = ?
+                    WHERE id = ?''',
+                 (email, imap_password, imap_server, user_id))
+        
+        # Vérifier si la mise à jour a réussi
+        if c.rowcount == 0:
+            print(f"Aucune mise à jour effectuée pour l'utilisateur {user_id}")
+            return False
+            
+        conn.commit()
+        conn.close()
+        print(f"Paramètres IMAP mis à jour avec succès pour l'utilisateur {user_id}")
+        return True
+    except sqlite3.Error as e:
+        print(f"Erreur lors de la mise à jour des paramètres IMAP : {e}")
+        return False
+    except Exception as e:
+        print(f"Erreur inattendue lors de la mise à jour des paramètres IMAP : {e}")
+        return False
+
+def update_gemini_api_key(user_id, api_key):
+    """Met à jour la clé API Gemini d'un utilisateur"""
+    try:
+        conn = sqlite3.connect('auth.db')
+        c = conn.cursor()
+        c.execute('''UPDATE users 
+                    SET gemini_api_key = ?
+                    WHERE id = ?''',
+                 (api_key, user_id))
+        conn.commit()
+        conn.close()
+        return True
+    except sqlite3.Error as e:
+        print(f"Erreur lors de la mise à jour de la clé API Gemini : {e}")
+        return False
+
+def get_gemini_api_key(user_id):
+    """Récupère la clé API Gemini d'un utilisateur"""
+    try:
+        conn = sqlite3.connect('auth.db')
+        c = conn.cursor()
+        c.execute('SELECT gemini_api_key FROM users WHERE id = ?', (user_id,))
+        result = c.fetchone()
+        conn.close()
+        
+        if not result:
+            print(f"Utilisateur {user_id} non trouvé")
+            return None
+            
+        return result[0]
+    except sqlite3.Error as e:
+        print(f"Erreur de base de données lors de la récupération de la clé API Gemini : {e}")
+        return None
+    except Exception as e:
+        print(f"Erreur inattendue lors de la récupération de la clé API Gemini : {e}")
+        return None
+
+        

@@ -106,28 +106,58 @@ body {
 }
 
 .nav-section li {
-  padding: 0.75rem 1rem;
-  border-radius: 0.5rem;
-  cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  color: var(--border-color);
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  cursor: pointer;
   transition: background-color 0.2s;
+  border-radius: 4px;
 }
 
 .nav-section li:hover {
-  background-color: var(--secondary-bg);
+  background-color: #f5f5f5;
 }
 
 .nav-section li.active {
-  background-color: var(--primary-color);
-  color: var(--white-color);
+  background-color: #e3f2fd;
+  color: #1976d2;
 }
 
 .nav-section li i {
-  width: 1.25rem;
+  width: 20px;
   text-align: center;
+}
+
+.nav-section li .count {
+  margin-left: auto;
+  background-color: #e3f2fd;
+  color: #1976d2;
+  padding: 0.25rem 0.5rem;
+  border-radius: 12px;
+  font-size: 0.875rem;
+  min-width: 24px;
+  text-align: center;
+}
+
+/* Style spécial pour le compteur de mails non lus */
+.nav-section li[data-category="non lus"] .count {
+  background-color: #ffebee;
+  color: #d32f2f;
+  font-weight: 500;
+}
+
+.nav-section li[data-category="non lus"] i {
+  color: #d32f2f;
+}
+
+.nav-section li[data-category="non lus"]:hover {
+  background-color: #ffebee;
+}
+
+.nav-section li[data-category="non lus"].active {
+  background-color: #ffebee;
+  color: #d32f2f;
 }
 
 /* Button Styles */
@@ -364,12 +394,14 @@ body {
   height: 100%;
   background-color: rgba(0, 0, 0, 0.5);
   z-index: 1000;
+  overflow-y: auto;
 }
 
 .modal.active {
   display: flex;
   justify-content: center;
-  align-items: center;
+  align-items: flex-start;
+  padding: 2rem 0;
 }
 
 .modal-content {
@@ -377,8 +409,7 @@ body {
   border-radius: 8px;
   width: 90%;
   max-width: 500px;
-  max-height: 90vh;
-  overflow-y: auto;
+  margin: auto;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
@@ -407,16 +438,108 @@ body {
 .form-group label {
   display: block;
   margin-bottom: 0.5rem;
-  color: #666;
+  font-weight: 500;
+  color: var(--text-color);
+}
+
+.input-group {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-group input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  font-size: 1rem;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+}
+
+.help-icon {
+  position: absolute;
+  right: 10px;
+  color: var(--primary-color);
+  cursor: help;
+  font-size: 1.1rem;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+
+.help-icon:hover {
+  opacity: 1;
+}
+
+.help-icon[data-tooltip] {
+  position: relative;
+}
+
+.help-icon[data-tooltip]:hover::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: 100%;
+  right: 0;
+  transform: translateY(-8px);
+  padding: 0.5rem;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  font-size: 0.875rem;
+  white-space: normal;
+  min-width: 200px;
+  max-width: 300px;
+  z-index: 1000;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.help-icon[data-tooltip]:hover::before {
+  content: "";
+  position: absolute;
+  bottom: 100%;
+  right: 10px;
+  transform: translateY(0);
+  border: 5px solid transparent;
+  border-top-color: var(--border-color);
+}
+
+.help-text {
+  margin-top: 0.5rem;
+  padding: 0.75rem;
+  background-color: var(--secondary-bg);
+  border-radius: 4px;
+  font-size: 0.9rem;
+  color: var(--text-color);
+}
+
+.help-text p {
+  margin-bottom: 0.5rem;
   font-weight: 500;
 }
 
-.form-group input {
-  width: 100%;
-  padding: 0.75rem;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 1rem;
+.help-text ol {
+  margin: 0;
+  padding-left: 1.5rem;
+}
+
+.help-text li {
+  margin-bottom: 0.25rem;
+}
+
+.help-text li:last-child {
+  margin-bottom: 0;
+}
+
+/* Tooltip personnalisé */
+[title] {
+  position: relative;
+}
+
+[title]:hover::after,
+[title]:hover::before {
+  display: none;
 }
 
 .form-actions {
@@ -509,5 +632,146 @@ body {
 @media screen and (-webkit-min-device-pixel-ratio: 1) {
   img {
     image-rendering: -webkit-optimize-contrast;
+  }
+}
+
+/* Styles pour la page de configuration */
+.setup-page {
+  min-height: 100vh;
+  background-color: var(--primary-bg);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+}
+
+.setup-container {
+  max-width: 600px;
+  margin: 2rem auto;
+  padding: 2rem;
+  background: var(--bg-secondary);
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.setup-container h1 {
+  color: var(--text-primary);
+  margin-bottom: 1rem;
+  font-size: 1.8rem;
+}
+
+.setup-description {
+  color: var(--text-secondary);
+  margin-bottom: 2rem;
+  line-height: 1.5;
+}
+
+.settings-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.form-group label {
+  color: var(--text-primary);
+  font-weight: 500;
+  font-size: 0.95rem;
+}
+
+.form-group input {
+  padding: 0.8rem;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-size: 1rem;
+  transition: border-color 0.3s ease;
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px rgba(var(--primary-rgb), 0.1);
+}
+
+.help-text {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  margin-top: 0.3rem;
+}
+
+.help-text i {
+  color: var(--primary-color);
+}
+
+.btn-primary {
+  background: var(--primary-color);
+  color: white;
+  padding: 0.8rem 1.5rem;
+  border: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.btn-primary:hover {
+  background: var(--primary-hover);
+}
+
+.notification {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  padding: 1rem 1.5rem;
+  border-radius: 6px;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  animation: slideIn 0.3s ease;
+}
+
+.notification.success {
+  background: #4caf50;
+  color: white;
+}
+
+.notification.error {
+  background: #f44336;
+  color: white;
+}
+
+.notification.info {
+  background: #2196f3;
+  color: white;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
   }
 }
