@@ -6,6 +6,9 @@
 
 EmailManager is a modern web application for managing and automatically classifying your emails. It uses the Google Gemini API to intelligently analyze and categorize your emails.
 
+![image](https://github.com/user-attachments/assets/e071a93e-08b4-4544-b509-9e524e6c8bdc)
+
+
 ## 🌟 Features
 
 - 🔐 **Secure Authentication**
